@@ -16,7 +16,7 @@
 // we specifically set load factor to be this high,
 // so that hash table is overloaded and we can test perfomance better
 const size_t HASH_TABLE_LOAD_FACTOR = 20;
-const uint64_t HASH_BASE            = 257;
+const uint64_t HASH_BASE            = 31;
 const size_t MAX_WORD_LEN           = 40;
 
 static size_t getHashOfKey(
@@ -30,7 +30,7 @@ static size_t getHashOfKey(
     const char* charPtr = key;
     while (*charPtr != '\0') {
         heh *= HASH_BASE;
-        heh += *charPtr + 1;
+        heh += *charPtr - 'a' + 1;
         ++charPtr;
     }
 

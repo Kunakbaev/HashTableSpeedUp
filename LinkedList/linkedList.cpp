@@ -21,11 +21,12 @@ LinkedListErrors constructLinkedListNode(
     IF_NOT_COND_RETURN(node != NULL,
                        LINKED_LIST_MEMORY_ALLOCATION_ERROR);
 
-    size_t keyLen = strlen(key);
-    (*node)->key = (char*)calloc(keyLen + 1, sizeof(char));
-    IF_NOT_COND_RETURN((*node)->key != NULL,
-                       LINKED_LIST_MEMORY_ALLOCATION_ERROR);
-    strcpy((*node)->key, key);
+    (*node)->key = (char*)key;
+    // size_t keyLen = strlen(key);
+    // (*node)->key = (char*)calloc(keyLen + 1, sizeof(char));
+    // IF_NOT_COND_RETURN((*node)->key != NULL,
+    //                    LINKED_LIST_MEMORY_ALLOCATION_ERROR);
+    // strcpy((*node)->key, key);
 
     (*node)->value = value;
     (*node)->prev  = NULL;
@@ -80,7 +81,7 @@ LinkedListErrors addNewElement(
 LinkedListErrors destructLinkedList(LinkedListNode* node) {
     while (node != NULL) {
         LinkedListNode* prev = node->prev;
-        free(node->key);
+        //free(node->key);
         free(node);
         node = prev;
     }
