@@ -1,0 +1,5 @@
+ERROR_UNPACK(INVALID_ARGUMENT,      1, "invalid argument (possible set to NULL)")
+ERROR_UNPACK(MEMORY_ALLOCATION,     2, "couldn't allocate memory")
+ERROR_UNPACK(KEY_NOT_FOUND,         3, "there's no such key in list")
+ERROR_UNPACK(COULDNT_OPEN_FILE,     4, "couldn't open file")
+ERROR_UNPACK(LINKED_LIST_SUBMODULE, 5, "error occured in linked list submodule")

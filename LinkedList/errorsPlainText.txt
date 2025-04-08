@@ -1,0 +1,3 @@
+ERROR_UNPACK(INVALID_ARGUMENT,  1, "invalid argument (possible set to NULL)")
+ERROR_UNPACK(MEMORY_ALLOCATION, 2, "couldn't allocate memory")
+ERROR_UNPACK(KEY_NOT_FOUND,     3, "there's no such key in list")
