@@ -57,6 +57,9 @@ int main() {
 
     LOG_DEBUG("Hello!");
 
+    // WARNING: don't forget to call this function
+    allocateFreeNodesBuffers();
+
     size_t numOfWords      = 0;
     size_t numOfShortWords = 0;
     size_t numOfLongWords  = 0;

@@ -2,8 +2,12 @@
 #define LINKED_LIST_LINKED_LIST_HPP
 
 #include <inttypes.h>
+#include <cstddef>
 
 #include "errorsHandlerLinkedList.hpp"
+
+const size_t MAX_NUM_OF_NODES           = 3710;
+const size_t MAX_NUM_OF_SMALL_KEY_NODES = 12e5 + 10;
 
 struct LinkedListNode {
     char*                           key;
@@ -16,6 +20,9 @@ struct LinkedListShortKeyNode {
     int                             value;
     LinkedListShortKeyNode*         prev;
 };
+
+// WARNING: don't forget to call this function
+LinkedListErrors allocateFreeNodesBuffers();
 
 uint64_t getHashForSmallLenKey(const char* key);
 
@@ -63,8 +70,8 @@ LinkedListErrors addNewElement2ShortKeysList(
 );
 
 // destructs whole link of nodes, not just this node
-LinkedListErrors destructLinkedList(LinkedListNode* node);
+LinkedListErrors destructLinkedList();
 
-LinkedListErrors destructShortKeysLinkedList(LinkedListShortKeyNode* node);
+LinkedListErrors destructShortKeysLinkedList();
 
 #endif

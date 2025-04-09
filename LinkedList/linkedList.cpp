@@ -10,34 +10,6 @@
 #define IF_NOT_COND_RETURN(condition, error) \
     COMMON_IF_NOT_COND_RETURN(condition, error, getLinkedListErrorMessage)\
 
-LinkedListErrors constructLinkedListNode(
-    const char*         key,
-    int                 value,
-    LinkedListNode**    node
-) {
-    IF_ARG_NULL_RETURN(node);
-
-    *node = (LinkedListNode*)calloc(1, sizeof(LinkedListNode));
-    IF_NOT_COND_RETURN(node != NULL,
-                       LINKED_LIST_MEMORY_ALLOCATION_ERROR);
-
-    (*node)->key = (char*)key;
-    // size_t keyLen = strlen(key);
-    // (*node)->key = (char*)calloc(keyLen + 1, sizeof(char));
-    // IF_NOT_COND_RETURN((*node)->key != NULL,
-    //                    LINKED_LIST_MEMORY_ALLOCATION_ERROR);
-    // strcpy((*node)->key, key);
-
-    (*node)->value = value;
-    (*node)->prev  = NULL;
-    // **node = {
-    //     .value      = value,
-    //     .prev       = NULL
-    // };
-
-    return LINKED_LIST_STATUS_OK;
-}
-
 // returns key not found error if key is not present in list
 LinkedListErrors findValueByKey(
     const LinkedListNode*   tail,
@@ -73,18 +45,6 @@ LinkedListErrors addNewElement(
 
     newNode->prev = *tail; // if tail is NULL everything is still valid
     *tail = newNode;
-
-    return LINKED_LIST_STATUS_OK;
-}
-
-// destructs whole link of nodes, not just this node
-LinkedListErrors destructLinkedList(LinkedListNode* node) {
-    while (node != NULL) {
-        LinkedListNode* prev = node->prev;
-        //free(node->key);
-        free(node);
-        node = prev;
-    }
 
     return LINKED_LIST_STATUS_OK;
 }

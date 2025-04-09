@@ -24,24 +24,6 @@ uint64_t getHashForSmallLenKey(const char* key) {
     return heh;
 }
 
-LinkedListErrors constructLinkedListShortKeyNode(
-    uint64_t                    keyHash,
-    int                         value,
-    LinkedListShortKeyNode**    node
-) {
-    IF_ARG_NULL_RETURN(node);
-
-    *node = (LinkedListShortKeyNode*)calloc(1, sizeof(LinkedListShortKeyNode));
-    IF_NOT_COND_RETURN(node != NULL,
-                       LINKED_LIST_MEMORY_ALLOCATION_ERROR);
-
-    (*node)->key   = keyHash;
-    (*node)->value = value;
-    (*node)->prev  = NULL;
-
-    return LINKED_LIST_STATUS_OK;
-}
-
 // returns key not found error if key is not present in list
 LinkedListErrors findValueBySmallLenKey(
     const LinkedListShortKeyNode*   tail,
@@ -76,17 +58,6 @@ LinkedListErrors addNewElement2ShortKeysList(
 
     newNode->prev = *tail; // if tail is NULL everything is still valid
     *tail = newNode;
-
-    return LINKED_LIST_STATUS_OK;
-}
-
-LinkedListErrors destructShortKeysLinkedList(LinkedListShortKeyNode* node) {
-    while (node != NULL) {
-        LinkedListShortKeyNode* prev = node->prev;
-        //free(node->key);
-        free(node);
-        node = prev;
-    }
 
     return LINKED_LIST_STATUS_OK;
 }

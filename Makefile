@@ -14,6 +14,7 @@ SRC_DIR							:= ./
 
 SRC 							:=  $(SRC_DIR)/main.cpp 			 				\
 									$(LINKED_LIST_DIR)/linkedList.cpp				\
+									$(LINKED_LIST_DIR)/common.cpp					\
 									$(LINKED_LIST_DIR)/linkedListShortKeys.cpp		\
 									$(LINKED_LIST_DIR)/errorsHandlerLinkedList.cpp	\
 									$(HASH_TABLE_DIR)/hashTable.cpp					\

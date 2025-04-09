@@ -200,15 +200,10 @@ HashTableErrors constructHashTableFromWordsFile(
 HashTableErrors destructHashTable(
     HashTable*      hashTable
 ) {
-    for (int i = 0; i < hashTable->capacityLongWords; ++i) {
-        IF_LIST_ERR_RETURN(destructLinkedList(hashTable->longWordsArray[i]));
-    }
-    free(hashTable->longWordsArray);
-
-    for (int i = 0; i < hashTable->capacityLongWords; ++i) {
-        IF_LIST_ERR_RETURN(destructShortKeysLinkedList(hashTable->shortWordsArray[i]));
-    }
+    IF_LIST_ERR_RETURN(destructLinkedList());
+    IF_LIST_ERR_RETURN(destructShortKeysLinkedList());
     free(hashTable->shortWordsArray);
+    free(hashTable->longWordsArray);
 
     return HASH_TABLE_STATUS_OK;
 }
