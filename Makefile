@@ -50,7 +50,7 @@ run:
 	@$(BUILD_DIR_PATH)/$(LIB_RUN_NAME)
 
 testPerfomance: clean compile
-	hyperfine building/hashTableSpeedUp  -r 10
+	hyperfine building/hashTableSpeedUp --warmup 5 -r 10
 
 runProfiling: clean compile
 	perf record building/hashTableSpeedUp
@@ -62,4 +62,4 @@ compileAndRun: clean compile run
 $(BUILD_DIR_TARGET_NAME):
 	@mkdir -p $(BUILD_DIR_PATH)
 clean:
-	@rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/$(LIB_RUN_NAME)
+	rm -rf $(BUILD_DIR_PATH)/*.o $(BUILD_DIR_PATH)/$(LIB_RUN_NAME)

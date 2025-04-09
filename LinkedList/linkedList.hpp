@@ -6,7 +6,7 @@
 
 #include "errorsHandlerLinkedList.hpp"
 
-const size_t MAX_NUM_OF_NODES           = 3710;
+const size_t MAX_NUM_OF_NODES           = 120000;
 const size_t MAX_NUM_OF_SMALL_KEY_NODES = 12e5 + 10;
 
 struct LinkedListNode {

@@ -3,7 +3,7 @@
 #include "external/LoggerLib/include/logLib.hpp"
 
 const size_t MAX_WORD_LEN   = 20;
-const size_t NUM_OF_QUERIES = 2000000;
+const size_t NUM_OF_QUERIES = 8000000;
 const int    NUM_OF_LETTERS = 26;
 
 void generateRandomWord(char* word) {

@@ -1,5 +1,5 @@
 
-MAX_LEN = 13
+MAX_LEN = 8
 
 with open("sourceFiles/allWords.txt", "r") as f:
     cntLongWords = 0
