@@ -57,14 +57,51 @@ int main() {
 
     LOG_DEBUG("Hello!");
 
-    size_t numOfWords = 0;
+    size_t numOfWords      = 0;
+    size_t numOfShortWords = 0;
+    size_t numOfLongWords  = 0;
     char** words = NULL;
-    readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt");
+    readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt", &numOfLongWords, &numOfShortWords);
+
+    LOG_DEBUG_VARS(numOfLongWords, numOfShortWords);
 
     struct HashTable hashTable = {};
-    constructHashTableFromWordsFile(&hashTable, numOfWords, words);    
+    constructHashTableFromWordsFile(&hashTable, numOfLongWords, numOfShortWords, words);    
+    LOG_DEBUG_VARS("ok");
 
     askQueries(&hashTable, words, numOfWords);
+
+
+
+
+
+    // const char* queries[] = {
+    //     "hobbit",
+    //     "hello",
+    //     "home",
+    //     "fast",
+    //     "shield",
+    //     "armor",
+    //     "Bilbo",
+    //     "was",
+    //     "not"
+    // };
+
+    // const size_t NUM_OF_Q = sizeof(queries) / sizeof(*queries);
+
+    // // setLoggingLevel(DEBUG);
+    // for (size_t wordInd = 0; wordInd < NUM_OF_Q; ++wordInd) {
+    //     int value = -1;
+    //     HashTableErrors err = getNumberOfWordsOccurences(&hashTable, queries[wordInd], &value);
+    //     if (err != HASH_TABLE_STATUS_OK) {
+    //         LOG_DEBUG_VARS(queries[wordInd], "no such word in text");
+    //     } else {
+    //         LOG_DEBUG_VARS(queries[wordInd], value);
+    //     }
+    // }
+
+
+
 
     // int numOfOccur = 0;
     // HashTableErrors err = getNumberOfWordsOccurences(&hashTable, "Hermione", &numOfOccur);

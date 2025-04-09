@@ -14,6 +14,7 @@ SRC_DIR							:= ./
 
 SRC 							:=  $(SRC_DIR)/main.cpp 			 				\
 									$(LINKED_LIST_DIR)/linkedList.cpp				\
+									$(LINKED_LIST_DIR)/linkedListShortKeys.cpp		\
 									$(LINKED_LIST_DIR)/errorsHandlerLinkedList.cpp	\
 									$(HASH_TABLE_DIR)/hashTable.cpp					\
 									$(HASH_TABLE_DIR)/errorsHandlerHashTable.cpp	\
@@ -46,6 +47,13 @@ $(BUILD_DIR_PATH)/%.o: $(HASH_TABLE_DIR)/%.cpp | $(BUILD_DIR_TARGET_NAME)
 
 run:
 	@$(BUILD_DIR_PATH)/$(LIB_RUN_NAME)
+
+testPerfomance: clean compile
+	hyperfine building/hashTableSpeedUp  -r 10
+
+runProfiling: clean compile
+	perf record building/hashTableSpeedUp
+	perf report
 
 # WARNING: cleans build dir everytime
 compileAndRun: clean compile run

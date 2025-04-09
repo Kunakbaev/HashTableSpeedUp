@@ -8,20 +8,27 @@
 #include "errorsHandlerHashTable.hpp"
 
 struct HashTable {
-    size_t                  numOfElements;
-    size_t                  capacity;
-    LinkedListNode**        array;
+    size_t                    numOfLongWords;
+    size_t                    capacityLongWords;
+    LinkedListNode**          longWordsArray;
+
+    size_t                    numOfShortWords;
+    size_t                    capacityShortWords;
+    LinkedListShortKeyNode**  shortWordsArray;
 };
 
 HashTableErrors readListOfWordsFromFile(
     size_t*         numOfWordsPtr,
     char***         words,
-    const char*     pathToWordsFile
+    const char*     pathToWordsFile,
+    size_t*         numOfLongWordsPtr,
+    size_t*         numOfShortWordsPtr
 );
 
 HashTableErrors constructHashTableFromWordsFile(
     HashTable*      hashTable,
-    size_t          numOfWords,
+    size_t          numOfLongWords,
+    size_t          numOfShortWords,
     char**          words
 );
 
