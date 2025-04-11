@@ -1,3 +1,5 @@
+#pragma GCC target("avx2")
+
 #include "linkedList.hpp"
 #include "../common/errorHandlerDefines.hpp"
 
@@ -10,7 +12,9 @@
 #define IF_NOT_COND_RETURN(condition, error) \
     COMMON_IF_NOT_COND_RETURN(condition, error, getLinkedListErrorMessage)\
 
-const uint64_t NUM_OF_LETTERS = 31;
+const size_t   ONE_KEY_BITS_SIZE = 256 / UNROLL_BATCH_SIZE;
+const uint64_t NUM_OF_LETTERS    = 31;
+static_assert(256 % UNROLL_BATCH_SIZE == 0);
 
 uint64_t getHashForSmallLenKey(const char* key) {
     uint64_t heh = 0;
@@ -25,25 +29,79 @@ uint64_t getHashForSmallLenKey(const char* key) {
 }
 
 // returns key not found error if key is not present in list
-LinkedListErrors findValueBySmallLenKey(
-    const LinkedListShortKeyNode*   tail,
+LinkedListErrors getPointerToValueBySmallLenKey(
+    LinkedListShortKeyNode*         tail,
     uint64_t                        keyHash,
-    int*                            value
+    int**                           value
 ) {
     IF_ARG_NULL_RETURN(value);
+    //IF_ARG_NULL_RETURN(*value);
 
-    const LinkedListShortKeyNode* curNode = tail;
+    //*value = 0;
+
+    //LOG_DEBUG_VARS("find value");
+    const __m256i searchKeyHashReg = _mm256_set1_epi64x(keyHash);
+    LinkedListShortKeyNode* curNode = tail;
+    size_t len = 0;
     while (curNode != NULL) {
-        //LOG_DEBUG_VARS(curNode->key, key);
-        if (curNode->key == keyHash) { [[unlikely]]
-            *value = curNode->value;
-            return LINKED_LIST_STATUS_OK;
+        __m256i curNodeKey = _mm256_loadu_si256((__m256i*)curNode->key);
+        __m256i cmpResReg = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
+        //int mask = 0;
+        if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
+            break;
         }
 
+        ++len;
         curNode = curNode->prev;
     }
+    //LOG_DEBUG_VARS(len);
+    //LOG_DEBUG_VARS("loop end");
 
-    return LINKED_LIST_KEY_NOT_FOUND_ERROR;
+    if (curNode == NULL) {
+        //*value = 0;
+        //LOG_DEBUG_VARS("ret not found");
+        return LINKED_LIST_KEY_NOT_FOUND_ERROR;
+    }
+
+    // *value = 0;
+    // yes, that's heavy for loop, but it's only 4 iterations
+    for (int i = 0; i < UNROLL_BATCH_SIZE; ++i) {
+        if (curNode->key[i] == keyHash) {
+            *value = &(curNode->value[i]);
+            break;
+        }
+    }
+
+    //LOG_DEBUG_VARS(*value);
+    //LOG_DEBUG_VARS("ret has found");
+
+    return LINKED_LIST_STATUS_OK;
+}
+
+static LinkedListErrors setNodesKeyAtIndex(
+    LinkedListShortKeyNode** node,
+    size_t                   keyIndex,
+    uint64_t                 key
+) {
+    IF_ARG_NULL_RETURN(node);
+    IF_ARG_NULL_RETURN(*node);
+
+    (*node)->key[keyIndex] = key;
+    // // ASK: how to do this properly?
+    // // will be done via jump table? only 4 keys, close located
+    // __m256i setterReg; // no initialization, because it's one operation and we want to make everything fast
+    // switch (keyIndex) {
+    //     case 0: setterReg = _mm256_set_epi64x(  0,   0,   0, key); break;
+    //     case 1: setterReg = _mm256_set_epi64x(  0,   0, key,   0); break;
+    //     case 2: setterReg = _mm256_set_epi64x(  0, key,   0,   0); break;
+    //     case 3: setterReg = _mm256_set_epi64x(key,   0,   0,   0); break;
+    //     default: assert(false);
+    // }
+
+    // // what's better addition or bitwise or
+    // _mm256_or_si256((*node)->key, setterReg);
+
+    return LINKED_LIST_STATUS_OK;
 }
 
 LinkedListErrors addNewElement2ShortKeysList(
@@ -53,11 +111,22 @@ LinkedListErrors addNewElement2ShortKeysList(
 ) {
     IF_ARG_NULL_RETURN(tail);
 
-    LinkedListShortKeyNode* newNode = NULL;
-    IF_ERR_RETURN(constructLinkedListShortKeyNode(keyHash, value, &newNode));
+    // LOG_DEBUG_VARS("ok");
+    if (*tail == NULL || (*tail)->numOfKeys == UNROLL_BATCH_SIZE) {
+        LinkedListShortKeyNode* newNode = NULL;
+        // LOG_DEBUG_VARS("new node");
+        IF_ERR_RETURN(constructLinkedListShortKeyNode(keyHash, &newNode));
+        newNode->value[0] = value;
+        // LOG_DEBUG_VARS("good");
 
-    newNode->prev = *tail; // if tail is NULL everything is still valid
-    *tail = newNode;
+        newNode->prev = *tail; // if tail is NULL everything is still valid
+        *tail = newNode;
+    }
+
+    // LOG_DEBUG_VARS("ok2", *tail, (int)((*tail)->numOfKeys));
+    IF_ERR_RETURN(setNodesKeyAtIndex(tail, (*tail)->numOfKeys, keyHash));
+    (*tail)->value[(*tail)->numOfKeys] = value;
+    ++(*tail)->numOfKeys;
 
     return LINKED_LIST_STATUS_OK;
 }

@@ -1,3 +1,5 @@
+#pragma GCC target("avx2")
+
 #include "linkedList.hpp"
 #include "../common/errorHandlerDefines.hpp"
 
@@ -51,7 +53,6 @@ LinkedListErrors constructLinkedListNode(
 }
 
 LinkedListErrors constructLinkedListShortKeyNode(
-    uint64_t                    keyHash,
     int                         value,
     LinkedListShortKeyNode**    node
 ) {
@@ -62,9 +63,14 @@ LinkedListErrors constructLinkedListShortKeyNode(
                        LINKED_LIST_MEMORY_ALLOCATION_ERROR);
     *node = &listShortKeyNodesBuffer[smallWordFreeNodeInd++];
 
-    (*node)->key   = keyHash;
-    (*node)->value = value;
-    (*node)->prev  = NULL;
+    //LOG_DEBUG_VARS("bruh", *node);
+    (*node)->numOfKeys = 0;
+    //LOG_DEBUG_VARS("megabruh");
+    //(*node)->key       = _mm256_setzero_si256(); // TODO: needs to be set later
+    //LOG_DEBUG_VARS("ok");
+    memset((*node)->key,   0, sizeof(int) * UNROLL_BATCH_SIZE);
+    memset((*node)->value, 0, sizeof(int) * UNROLL_BATCH_SIZE);
+    (*node)->prev      = NULL;
 
     return LINKED_LIST_STATUS_OK;
 }
