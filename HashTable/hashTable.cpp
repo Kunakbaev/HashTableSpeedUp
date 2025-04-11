@@ -15,7 +15,7 @@
 
 // we specifically set load factor to be this high,
 // so that hash table is overloaded and we can test perfomance better
-const size_t HASH_TABLE_LOAD_FACTOR = 5;
+const size_t HASH_TABLE_LOAD_FACTOR = 200;
 const uint64_t HASH_BASE            = 31;
 const size_t MAX_WORD_LEN           = 40;
 const size_t SMALL_WORD_MAX_LEN     = 12;
@@ -183,6 +183,7 @@ HashTableErrors constructHashTableFromWordsFile(
     IF_NOT_COND_RETURN(hashTable->shortWordsArray != NULL,
                        HASH_TABLE_MEMORY_ALLOCATION_ERROR);
 
+    LOG_DEBUG_VARS(hashTable->capacityShortWords, hashTable->capacityLongWords);
     size_t numOfWords = numOfLongWords + numOfShortWords;
     for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
         char* word = words[wordInd];

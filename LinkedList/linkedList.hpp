@@ -9,7 +9,7 @@
 
 #include "errorsHandlerLinkedList.hpp"
 
-const size_t UNROLL_BATCH_SIZE          = 4;
+const size_t UNROLL_BATCH_SIZE          = 8;
 const size_t MAX_NUM_OF_NODES           = 120000;
 const size_t MAX_NUM_OF_SMALL_KEY_NODES = 12e5 + 10;
 
@@ -21,7 +21,7 @@ struct LinkedListNode {
 
 struct LinkedListShortKeyNode {
     LinkedListShortKeyNode*         prev;
-    uint64_t                        key[UNROLL_BATCH_SIZE];
+    __restrict uint64_t                        key[UNROLL_BATCH_SIZE];
     int                             value[UNROLL_BATCH_SIZE];
     char                            numOfKeys;
 };

@@ -12,9 +12,9 @@
 #define IF_NOT_COND_RETURN(condition, error) \
     COMMON_IF_NOT_COND_RETURN(condition, error, getLinkedListErrorMessage)\
 
-const size_t   ONE_KEY_BITS_SIZE = 256 / UNROLL_BATCH_SIZE;
+//const size_t   ONE_KEY_BITS_SIZE = 256 / UNROLL_BATCH_SIZE;
 const uint64_t NUM_OF_LETTERS    = 31;
-static_assert(256 % UNROLL_BATCH_SIZE == 0);
+//static_assert(256 % UNROLL_BATCH_SIZE == 0);
 
 uint64_t getHashForSmallLenKey(const char* key) {
     uint64_t heh = 0;
@@ -31,7 +31,7 @@ uint64_t getHashForSmallLenKey(const char* key) {
 // returns key not found error if key is not present in list
 LinkedListErrors getPointerToValueBySmallLenKey(
     LinkedListShortKeyNode*         tail,
-    uint64_t                        keyHash,
+    const uint64_t                  keyHash,
     int**                           value
 ) {
     IF_ARG_NULL_RETURN(value);
@@ -40,21 +40,44 @@ LinkedListErrors getPointerToValueBySmallLenKey(
     //*value = 0;
 
     //LOG_DEBUG_VARS("find value");
-    const __m256i searchKeyHashReg = _mm256_set1_epi64x(keyHash);
+    //const __m256i searchKeyHashReg = _mm256_set1_epi64x(keyHash);
     LinkedListShortKeyNode* curNode = tail;
     size_t len = 0;
     while (curNode != NULL) {
-        __m256i curNodeKey = _mm256_loadu_si256((__m256i*)curNode->key);
-        __m256i cmpResReg = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
-        //int mask = 0;
-        if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
-            break;
-        }
+        // __m256i curNodeKey = _mm256_loadu_si256((__m256i*)curNode->key);
+        // __m256i cmpResReg = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
+        // //int mask = 0;
+        // if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
+        //     break;
+        // }
+
+        // bool f = curNode->key[0] == keyHash ||
+        //          curNode->key[1] == keyHash ||
+        //          curNode->key[2] == keyHash ||
+        //          curNode->key[3] == keyHash ||
+        //          curNode->key[4] == keyHash ||
+        //          curNode->key[5] == keyHash ||
+        //          curNode->key[6] == keyHash ||
+        //          curNode->key[7] == keyHash;
+        // if (f) { [[unlikely]]
+        //     break;
+        // }
+
+        int c = 0;
+        for (size_t i = 0; i < UNROLL_BATCH_SIZE; ++i)
+            c += curNode->key[i] == keyHash;
+        if (c) break;
+
+        // int c = 0;
+        // const uint64_t* ptr = curNode->key;
+        // for (size_t i = 0; i < UNROLL_BATCH_SIZE; ++i, ++ptr)
+        //     c += *ptr == keyHash;
+        // if (c) break;
 
         ++len;
         curNode = curNode->prev;
     }
-    //LOG_DEBUG_VARS(len);
+    LOG_DEBUG_VARS(len);
     //LOG_DEBUG_VARS("loop end");
 
     if (curNode == NULL) {
@@ -78,31 +101,31 @@ LinkedListErrors getPointerToValueBySmallLenKey(
     return LINKED_LIST_STATUS_OK;
 }
 
-static LinkedListErrors setNodesKeyAtIndex(
-    LinkedListShortKeyNode** node,
-    size_t                   keyIndex,
-    uint64_t                 key
-) {
-    IF_ARG_NULL_RETURN(node);
-    IF_ARG_NULL_RETURN(*node);
+// static LinkedListErrors setNodesKeyAtIndex(
+//     LinkedListShortKeyNode** node,
+//     size_t                   keyIndex,
+//     uint64_t                 key
+// ) {
+//     IF_ARG_NULL_RETURN(node);
+//     IF_ARG_NULL_RETURN(*node);
 
-    (*node)->key[keyIndex] = key;
-    // // ASK: how to do this properly?
-    // // will be done via jump table? only 4 keys, close located
-    // __m256i setterReg; // no initialization, because it's one operation and we want to make everything fast
-    // switch (keyIndex) {
-    //     case 0: setterReg = _mm256_set_epi64x(  0,   0,   0, key); break;
-    //     case 1: setterReg = _mm256_set_epi64x(  0,   0, key,   0); break;
-    //     case 2: setterReg = _mm256_set_epi64x(  0, key,   0,   0); break;
-    //     case 3: setterReg = _mm256_set_epi64x(key,   0,   0,   0); break;
-    //     default: assert(false);
-    // }
+//     (*node)->key[keyIndex] = key;
+//     // // ASK: how to do this properly?
+//     // // will be done via jump table? only 4 keys, close located
+//     // __m256i setterReg; // no initialization, because it's one operation and we want to make everything fast
+//     // switch (keyIndex) {
+//     //     case 0: setterReg = _mm256_set_epi64x(  0,   0,   0, key); break;
+//     //     case 1: setterReg = _mm256_set_epi64x(  0,   0, key,   0); break;
+//     //     case 2: setterReg = _mm256_set_epi64x(  0, key,   0,   0); break;
+//     //     case 3: setterReg = _mm256_set_epi64x(key,   0,   0,   0); break;
+//     //     default: assert(false);
+//     // }
 
-    // // what's better addition or bitwise or
-    // _mm256_or_si256((*node)->key, setterReg);
+//     // // what's better addition or bitwise or
+//     // _mm256_or_si256((*node)->key, setterReg);
 
-    return LINKED_LIST_STATUS_OK;
-}
+//     return LINKED_LIST_STATUS_OK;
+// }
 
 LinkedListErrors addNewElement2ShortKeysList(
     LinkedListShortKeyNode**    tail,
@@ -124,7 +147,8 @@ LinkedListErrors addNewElement2ShortKeysList(
     }
 
     // LOG_DEBUG_VARS("ok2", *tail, (int)((*tail)->numOfKeys));
-    IF_ERR_RETURN(setNodesKeyAtIndex(tail, (*tail)->numOfKeys, keyHash));
+    // IF_ERR_RETURN(setNodesKeyAtIndex(tail, (*tail)->numOfKeys, keyHash));
+      (*tail)->key[(*tail)->numOfKeys] = keyHash;
     (*tail)->value[(*tail)->numOfKeys] = value;
     ++(*tail)->numOfKeys;
 
