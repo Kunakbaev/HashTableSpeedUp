@@ -43,18 +43,18 @@ LinkedListErrors constructLinkedListShortKeyNode(
 }
 
 // returns key not found error if key is not present in list
-LinkedListErrors findValueBySmallLenKey(
-    const LinkedListShortKeyNode*   tail,
+LinkedListErrors getPointerToValueBySmallLenKey(
+    LinkedListShortKeyNode*         tail,
     uint64_t                        keyHash,
-    int*                            value
+    int**                           value
 ) {
     IF_ARG_NULL_RETURN(value);
 
-    const LinkedListShortKeyNode* curNode = tail;
+    LinkedListShortKeyNode* curNode = tail;
     while (curNode != NULL) {
         //LOG_DEBUG_VARS(curNode->key, key);
         if (curNode->key == keyHash) { [[unlikely]]
-            *value = curNode->value;
+            *value = &(curNode->value);
             return LINKED_LIST_STATUS_OK;
         }
 

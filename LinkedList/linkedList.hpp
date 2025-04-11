@@ -38,16 +38,16 @@ LinkedListErrors constructLinkedListNode(
 );
 
 // returns key not found error if key is not present in list
-LinkedListErrors findValueByKey(
-    const LinkedListNode*           tail,
+LinkedListErrors getPointerToValue(
+    LinkedListNode*                 tail,
     const char*                     key,
-    int*                            value
+    int**                           value
 );
 
-LinkedListErrors findValueBySmallLenKey(
-    const LinkedListShortKeyNode*   tail,
+LinkedListErrors getPointerToValueBySmallLenKey(
+    LinkedListShortKeyNode*         tail,
     uint64_t                        keyHash,
-    int*                            value
+    int**                           value
 );
 
 LinkedListErrors addNewElement(

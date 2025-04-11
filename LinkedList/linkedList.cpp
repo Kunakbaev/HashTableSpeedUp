@@ -39,19 +39,19 @@ LinkedListErrors constructLinkedListNode(
 }
 
 // returns key not found error if key is not present in list
-LinkedListErrors findValueByKey(
-    const LinkedListNode*   tail,
+LinkedListErrors getPointerToValue(
+    LinkedListNode*         tail,
     const char*             key,
-    int*                    value
+    int**                   value
 ) {
     IF_ARG_NULL_RETURN(key);
     IF_ARG_NULL_RETURN(value);
 
-    const LinkedListNode* curNode = tail;
+    LinkedListNode* curNode = tail;
     while (curNode != NULL) {
         //LOG_DEBUG_VARS(curNode->key, key);
         if (strcmp(key, curNode->key) == 0) {
-            *value = curNode->value;
+            *value = &(curNode->value);
             return LINKED_LIST_STATUS_OK;
         }
 

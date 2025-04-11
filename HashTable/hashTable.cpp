@@ -130,16 +130,18 @@ HashTableErrors getNumberOfWordsOccurences(
     IF_ARG_NULL_RETURN(value);
     size_t wordLen = strlen(word);
 
+    int* nodeValuePtr = NULL;
     LinkedListErrors err = LINKED_LIST_STATUS_OK;
     if (wordLen > SMALL_WORD_MAX_LEN) {
         int keyHash = getHashOfKey(hashTable, word);
-        err = findValueByKey(hashTable->longWordsArray[keyHash], word, value);
+        err = getPointerToValue(hashTable->longWordsArray[keyHash], word, &nodeValuePtr);
     } else {
         uint64_t keyHashForSmall = getHashForSmallLenKey(word);
         int keyHash = getHashOfSmallKey(hashTable, keyHashForSmall);
         //LOG_DEBUG_VARS(keyHash, keyHashForSmall, word);
-        err = findValueBySmallLenKey(hashTable->shortWordsArray[keyHash], keyHashForSmall, value);
+        err = getPointerToValueBySmallLenKey(hashTable->shortWordsArray[keyHash], keyHashForSmall, &nodeValuePtr);
     }
+    *value = nodeValuePtr == NULL ? 0 : *nodeValuePtr;
 
     if (err != LINKED_LIST_KEY_NOT_FOUND_ERROR &&
         err != LINKED_LIST_STATUS_OK)
@@ -177,17 +179,26 @@ HashTableErrors constructHashTableFromWordsFile(
 
         if (wordLen > SMALL_WORD_MAX_LEN) {
             int keyHash = getHashOfKey(hashTable, word);
-            int oldNumOfOccur = 0;
-            LinkedListErrors err = findValueByKey(hashTable->longWordsArray[keyHash], word, &oldNumOfOccur);
+            int* nodeValuePtr = NULL;
+            LinkedListErrors err = getPointerToValue(hashTable->longWordsArray[keyHash], word, &nodeValuePtr);
             //LOG_DEBUG_VARS(wordBuffer, oldNumOfOccur);
-            IF_LIST_ERR_RETURN(addNewElement(&hashTable->longWordsArray[keyHash], word, oldNumOfOccur + 1));
+            if (err == LINKED_LIST_KEY_NOT_FOUND_ERROR) {
+                IF_LIST_ERR_RETURN(addNewElement(&hashTable->longWordsArray[keyHash], word, 1));
+            } else {
+                *nodeValuePtr = *nodeValuePtr + 1;
+            }
         } else {
             uint64_t keyHashForSmall = getHashForSmallLenKey(word);
             int keyHash = getHashOfSmallKey(hashTable, keyHashForSmall);
-            int oldNumOfOccur = 0;
-            LinkedListErrors err = findValueBySmallLenKey(hashTable->shortWordsArray[keyHash], keyHashForSmall, &oldNumOfOccur);
+            int* nodeValuePtr = NULL;
+            LinkedListErrors err = getPointerToValueBySmallLenKey(hashTable->shortWordsArray[keyHash], keyHashForSmall, &nodeValuePtr);
             //LOG_DEBUG_VARS(wordBuffer, oldNumOfOccur);
-            IF_LIST_ERR_RETURN(addNewElement2ShortKeysList(&hashTable->shortWordsArray[keyHash], keyHashForSmall, oldNumOfOccur + 1));
+            if (err == LINKED_LIST_KEY_NOT_FOUND_ERROR) {
+                IF_LIST_ERR_RETURN(addNewElement2ShortKeysList(&hashTable->shortWordsArray[keyHash], keyHashForSmall, 1));
+            } else {
+                //LOG_DEBUG_VARS(nodeValuePtr);
+                *nodeValuePtr = *nodeValuePtr + 1;
+            }
         }
 
         // if (wordInd % 30000 == 0) LOG_DEBUG_VARS(wordInd);
