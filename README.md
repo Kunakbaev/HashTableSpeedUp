@@ -77,6 +77,14 @@ New performance data:
 
 Works **2.11** times faster than previous approach (111% performance boost) and **2.80** times better than initial design (180% improvement).
 
+If we add -O3 optimization flag (by default all approaches were has been run with -Ofast flag) to file with our bottleneck function, we will se some additional performance improvement.
 
+![linked list key search optimization with O3 performance data](images/linkedListKeyOptO3_performance.png)
 
+![linked list key search optimization with O3 profiling info](images/linkedListKeyOptO3_profiling.png)
 
+Works **1.23** times better than without this optimization flag and **3.46** times better than naive approach.
+
+Why did this happen?
+
+Let's use some **perf** functionality to find the reason. We can inspect assembler code for **getPointerToValueBySmallLenKey** (nice naming, yes) function (that's our bottleneck) to see how it differs from previous one. It occurs, that **-O3** managed to unroll loop into 8 operations, so this time comparisons are really happening all at once.
