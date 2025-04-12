@@ -27,9 +27,7 @@ const size_t MAX_WORD_LEN   = 20;
 // }
 
 // void askQueries(
-//     struct HashTable*       hashTable,
-//     char**                  words,
-//     size_t                  numOfWords
+//     struct HashTable*       hashTable
 // ) {
 //     assert(hashTable != NULL);
 
@@ -53,9 +51,7 @@ const size_t MAX_WORD_LEN   = 20;
 // }
 
 void askQueries(
-    struct HashTable*       hashTable,
-    char**                  words,
-    size_t                  numOfWords
+    struct HashTable*       hashTable
 ) {
     assert(hashTable != NULL);
 
@@ -97,48 +93,49 @@ int main() {
     // WARNING: don't forget to call this function
     allocateFreeNodesBuffers();
 
-    size_t numOfWords      = 0;
-    size_t numOfShortWords = 0;
-    size_t numOfLongWords  = 0;
-    char** words = NULL;
-    readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt", &numOfLongWords, &numOfShortWords);
+    //size_t numOfWords      = 0;
+    //size_t numOfShortWords = 0;
+    //size_t numOfLongWords  = 0;
+    //char** words = NULL;
+    //readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt", &numOfLongWords, &numOfShortWords);
 
-    LOG_DEBUG_VARS(numOfLongWords, numOfShortWords);
+    //LOG_DEBUG_VARS(numOfLongWords, numOfShortWords);
 
     struct HashTable hashTable = {};
-    constructHashTableFromWordsFile(&hashTable, numOfLongWords, numOfShortWords, words);    
+    //constructHashTableFromWordsFile(&hashTable, numOfLongWords, numOfShortWords, words);    
+    constructHashTableFromWordsFile("sourceFiles/allWords.txt", &hashTable);
     LOG_DEBUG_VARS("ok");
 
-    //askQueries(&hashTable, words, numOfWords);
+    askQueries(&hashTable);
 
 
 
 
 
-    const char* queries[] = {
-        "hobbit",
-        "hello",
-        "home",
-        "fast",
-        "shield",
-        "armor",
-        "Bilbo",
-        "was",
-        "not"
-    };
+    // const char* queries[] = {
+    //     "hobbit",
+    //     "hello",
+    //     "home",
+    //     "fast",
+    //     "shield",
+    //     "armor",
+    //     "Bilbo",
+    //     "was",
+    //     "not"
+    // };
 
-    const size_t NUM_OF_Q = sizeof(queries) / sizeof(*queries);
+    // const size_t NUM_OF_Q = sizeof(queries) / sizeof(*queries);
 
-    // setLoggingLevel(DEBUG);
-    for (size_t wordInd = 0; wordInd < NUM_OF_Q; ++wordInd) {
-        int value = -1;
-        HashTableErrors err = getNumberOfWordsOccurences(&hashTable, queries[wordInd], &value);
-        if (err != HASH_TABLE_STATUS_OK) {
-            LOG_DEBUG_VARS(queries[wordInd], "no such word in text");
-        } else {
-            LOG_DEBUG_VARS(queries[wordInd], value);
-        }
-    }
+    // // setLoggingLevel(DEBUG);
+    // for (size_t wordInd = 0; wordInd < NUM_OF_Q; ++wordInd) {
+    //     int value = -1;
+    //     HashTableErrors err = getNumberOfWordsOccurences(&hashTable, queries[wordInd], &value);
+    //     if (err != HASH_TABLE_STATUS_OK) {
+    //         LOG_DEBUG_VARS(queries[wordInd], "no such word in text");
+    //     } else {
+    //         LOG_DEBUG_VARS(queries[wordInd], value);
+    //     }
+    // }
 
 
 
@@ -148,13 +145,13 @@ int main() {
     // LOG_DEBUG_VARS(numOfOccur);
 
     destructHashTable(&hashTable);
-    for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        if (words[wordInd] != NULL) {
-            //LOG_DEBUG_VARS(wordInd, words[wordInd]);
-            free(words[wordInd]);
-        }
-    }
-    free(words);
+    // for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
+    //     if (words[wordInd] != NULL) {
+    //         //LOG_DEBUG_VARS(wordInd, words[wordInd]);
+    //         free(words[wordInd]);
+    //     }
+    // }
+    // free(words);
 
 
     // struct HashTable hashTable = {};

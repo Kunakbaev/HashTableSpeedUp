@@ -77,7 +77,7 @@ LinkedListErrors getPointerToValueBySmallLenKey(
         ++len;
         curNode = curNode->prev;
     }
-    LOG_DEBUG_VARS(len);
+    //LOG_DEBUG_VARS(len);
     //LOG_DEBUG_VARS("loop end");
 
     if (curNode == NULL) {

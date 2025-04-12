@@ -1,3 +1,7 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "hashTable.hpp"
 #include "../common/errorHandlerDefines.hpp"
 
@@ -19,6 +23,7 @@ const size_t HASH_TABLE_LOAD_FACTOR = 200;
 const uint64_t HASH_BASE            = 31;
 const size_t MAX_WORD_LEN           = 40;
 const size_t SMALL_WORD_MAX_LEN     = 12;
+const size_t MAX_BYTES_IN_FILE      = 13e6 + 10;
 
 static size_t getHashOfKey(
     struct HashTable* hashTable,
@@ -69,6 +74,13 @@ static HashTableErrors getNumberOfLines(
     return HASH_TABLE_STATUS_OK;
 }
 
+size_t getFileSize(FILE* file) {
+    struct stat buf;
+    fstat(fileno(file), &buf);
+    off_t fileSize = buf.st_size;
+    return fileSize;
+}
+
 HashTableErrors readListOfWordsFromFile(
     size_t*         numOfWordsPtr,
     char***         words,
@@ -76,11 +88,20 @@ HashTableErrors readListOfWordsFromFile(
     size_t*         numOfLongWordsPtr,
     size_t*         numOfShortWordsPtr
 ) {
-    FILE* file = fopen(pathToWordsFile, "r");
+    FILE* file = fopen(pathToWordsFile, "rb");
     IF_NOT_COND_RETURN(file != NULL,
                        HASH_TABLE_COULDNT_OPEN_FILE_ERROR);
 
+    size_t fileSize = getFileSize(file);
     LOG_DEBUG("successfuly opened file");
+    LOG_DEBUG_VARS(fileSize);
+
+    char* fileBuffer = (char*)calloc(MAX_BYTES_IN_FILE, sizeof(char));
+    IF_NOT_COND_RETURN(fileBuffer != NULL,
+                       HASH_TABLE_MEMORY_ALLOCATION_ERROR);
+
+    fread(fileBuffer, sizeof(char), fileSize, file);
+
     size_t numOfWords      = 0; // equal to number of lines in file
     size_t numOfLongWords  = 0;
     size_t numOfShortWords = 0;
@@ -90,7 +111,7 @@ HashTableErrors readListOfWordsFromFile(
     *words = (char**)calloc(numOfWords, sizeof(char*));
     IF_NOT_COND_RETURN(*words != NULL,
                        HASH_TABLE_MEMORY_ALLOCATION_ERROR);
-    
+
     char wordBuffer[MAX_WORD_LEN] = {};
     for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
         fgets(wordBuffer, MAX_WORD_LEN, file);
@@ -163,12 +184,52 @@ static size_t getPowerOf2Capacity(size_t numOfWords) {
 }
 
 HashTableErrors constructHashTableFromWordsFile(
-    HashTable*      hashTable,
-    size_t          numOfLongWords,
-    size_t          numOfShortWords,
-    char**          words
+    const char*     pathToWordsFile,
+    HashTable*      hashTable
 ) {
     IF_ARG_NULL_RETURN(hashTable);
+
+
+
+
+
+    FILE* file = fopen(pathToWordsFile, "r");
+    IF_NOT_COND_RETURN(file != NULL,
+                       HASH_TABLE_COULDNT_OPEN_FILE_ERROR);
+
+    size_t fileSize = getFileSize(file);
+    LOG_DEBUG("successfuly opened file");
+    LOG_DEBUG_VARS(fileSize);
+
+    hashTable->fileBuffer = (char*)calloc(MAX_BYTES_IN_FILE, sizeof(char));
+    IF_NOT_COND_RETURN(hashTable->fileBuffer != NULL,
+                       HASH_TABLE_MEMORY_ALLOCATION_ERROR);
+
+    fread(hashTable->fileBuffer, sizeof(char), fileSize, file);
+
+    size_t numOfLongWords  = 0;
+    size_t numOfShortWords = 0;
+    char* ptr = hashTable->fileBuffer, *nxt = ptr;
+    while ((nxt = strchr(ptr, '\n')) != NULL) {
+        size_t len = nxt - ptr - 1;
+        //LOG_DEBUG_VARS(len);
+        if (len > SMALL_WORD_MAX_LEN) {
+            ++numOfLongWords;
+        } else {
+            ++numOfShortWords;
+        }
+
+        *nxt = '\0'; // change \n to \0
+        ptr = nxt + 1;
+    }
+    LOG_DEBUG_VARS("counted number of words");
+
+
+
+
+
+
+
 
     hashTable->numOfLongWords     = numOfLongWords;
     hashTable->numOfShortWords    = numOfShortWords;
@@ -185,8 +246,8 @@ HashTableErrors constructHashTableFromWordsFile(
 
     LOG_DEBUG_VARS(hashTable->capacityShortWords, hashTable->capacityLongWords);
     size_t numOfWords = numOfLongWords + numOfShortWords;
+    char* word = hashTable->fileBuffer;
     for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        char* word = words[wordInd];
         size_t wordLen = strlen(word);
 
         // if (wordInd % 10000 == 0)
@@ -218,7 +279,9 @@ HashTableErrors constructHashTableFromWordsFile(
 
         // if (wordInd % 30000 == 0) LOG_DEBUG_VARS(wordInd);
         //LOG_DEBUG_VARS(wordLen, word);
+        word += wordLen + 1;
     }
+    LOG_DEBUG_VARS("finished adding words to table");
 
     return HASH_TABLE_STATUS_OK;
 }
@@ -230,6 +293,7 @@ HashTableErrors destructHashTable(
     IF_LIST_ERR_RETURN(destructShortKeysLinkedList());
     free(hashTable->shortWordsArray);
     free(hashTable->longWordsArray);
+    free(hashTable->fileBuffer);
 
     return HASH_TABLE_STATUS_OK;
 }

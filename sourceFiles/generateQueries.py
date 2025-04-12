@@ -4,10 +4,11 @@ lines = []
 with open("allWords.txt", "r") as f:
     lines = f.readlines()
 
-# print("num of unique words: ", len(set(lines)))
+print("number of words : ", len(lines))
+print("num of unique words: ", len(set(lines)))
 
 with open("queries.txt", "w") as f:
-    numOfQueries = int(2e6)
+    numOfQueries = int(4e6)
     for _ in range(numOfQueries):
         if random.randint(1, 2) & 1:
             wordInd = random.randint(0, len(lines) - 1)
