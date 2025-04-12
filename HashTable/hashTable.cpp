@@ -74,7 +74,7 @@ static HashTableErrors getNumberOfLines(
     return HASH_TABLE_STATUS_OK;
 }
 
-size_t getFileSize(FILE* file) {
+static size_t getFileSize(FILE* file) {
     struct stat buf;
     fstat(fileno(file), &buf);
     off_t fileSize = buf.st_size;

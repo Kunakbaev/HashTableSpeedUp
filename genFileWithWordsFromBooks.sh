@@ -42,6 +42,6 @@ generateAllWordFiles
 echo "concatinating all words from all books into one file"
 concatWordFilesIntoOne
 
-cat "$SOURCE_FILES_DIR/$ALL_WORDS_FILE_NAME.txt" "$SOURCE_FILES_DIR/randWordsFile" > "$SOURCE_FILES_DIR/allWords.txt"
+cat "$SOURCE_FILES_DIR/$ALL_WORDS_FILE_NAME.txt" "$SOURCE_FILES_DIR/randWordsFile" | awk '{print tolower($0)}' > "$SOURCE_FILES_DIR/allWords.txt"
 
 echo "done"
