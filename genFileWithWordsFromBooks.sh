@@ -5,7 +5,7 @@ set -eu
 SOURCE_FILES_DIR="sourceFiles"
 BOOKS_SOURCE_DIR="$SOURCE_FILES_DIR/books"
 FILES_WITH_WORDS_DEST_DIR="$SOURCE_FILES_DIR/words"
-ALL_WORDS_FILE_NAME="allWords"
+ALL_WORDS_FILE_NAME="allWordsFromBooks"
 MIN_WORD_LEN=3
 
 echo "parsing words from books located at $BOOKS_SOURCE_DIR" 
@@ -41,5 +41,7 @@ generateAllWordFiles
 
 echo "concatinating all words from all books into one file"
 concatWordFilesIntoOne
+
+cat "$SOURCE_FILES_DIR/$ALL_WORDS_FILE_NAME.txt" "$SOURCE_FILES_DIR/randWordsFile" | awk '{print tolower($0)}' > "$SOURCE_FILES_DIR/allWords.txt"
 
 echo "done"
