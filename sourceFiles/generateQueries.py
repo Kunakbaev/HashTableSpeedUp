@@ -1,5 +1,7 @@
 import random
 
+random.seed(228)
+
 lines = []
 with open("allWords.txt", "r") as f:
     lines = f.readlines()

@@ -1,5 +1,7 @@
 import random
 
+random.seed(228)
+
 NUM_OF_WORDS = int(2e5)
 MIN_WORD_LEN = 3
 MAX_WORD_LEN = 8
