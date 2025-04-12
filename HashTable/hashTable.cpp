@@ -1,3 +1,7 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "hashTable.hpp"
 #include "../common/errorHandlerDefines.hpp"
 
@@ -15,9 +19,10 @@
 
 // we specifically set load factor to be this high,
 // so that hash table is overloaded and we can test perfomance better
-const size_t HASH_TABLE_LOAD_FACTOR = 20;
+const size_t HASH_TABLE_LOAD_FACTOR = 200;
 const uint64_t HASH_BASE            = 31;
 const size_t MAX_WORD_LEN           = 40;
+const size_t MAX_BYTES_IN_FILE      = 13e6 + 10;
 
 static size_t getHashOfKey(
     struct HashTable* hashTable,
@@ -58,69 +63,86 @@ static HashTableErrors getNumberOfLines(
     return HASH_TABLE_STATUS_OK;
 }
 
-HashTableErrors readListOfWordsFromFile(
-    size_t*         numOfWordsPtr,
-    char***         words,
-    const char*     pathToWordsFile
+static size_t getFileSize(FILE* file) {
+    struct stat buf;
+    fstat(fileno(file), &buf);
+    off_t fileSize = buf.st_size;
+    return fileSize;
+}
+
+HashTableErrors constructHashTableFromWordsFile(
+    const char*     pathToWordsFile,
+    HashTable*      hashTable
 ) {
+    IF_ARG_NULL_RETURN(hashTable);
+
+
+
+
+
     FILE* file = fopen(pathToWordsFile, "r");
     IF_NOT_COND_RETURN(file != NULL,
                        HASH_TABLE_COULDNT_OPEN_FILE_ERROR);
 
+    size_t fileSize = getFileSize(file);
     LOG_DEBUG("successfuly opened file");
-    size_t numOfWords = 0; // equal to number of lines in file
-    getNumberOfLines(file, '\n', &numOfWords);
-    LOG_DEBUG_VARS(numOfWords);
+    LOG_DEBUG_VARS(fileSize);
 
-    *words = (char**)calloc(numOfWords, sizeof(char*));
-    IF_NOT_COND_RETURN(*words != NULL,
+    hashTable->fileBuffer = (char*)calloc(MAX_BYTES_IN_FILE, sizeof(char));
+    IF_NOT_COND_RETURN(hashTable->fileBuffer != NULL,
                        HASH_TABLE_MEMORY_ALLOCATION_ERROR);
-    
-    char wordBuffer[MAX_WORD_LEN] = {};
-    for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        fgets(wordBuffer, MAX_WORD_LEN, file);
-        //LOG_DEBUG_VARS(wordBuffer);
 
-        // remove \n from end of word
-        size_t wordBuffLen = strlen(wordBuffer);
-        if (wordBuffLen <= 1) continue;
-        wordBuffer[wordBuffLen - 1] = '\0';
+    fread(hashTable->fileBuffer, sizeof(char), fileSize, file);
 
-        (*words)[wordInd] = (char*)calloc(wordBuffLen + 1, sizeof(char));
-        IF_NOT_COND_RETURN((*words)[wordInd] != NULL,
-                           HASH_TABLE_MEMORY_ALLOCATION_ERROR);
-        strcpy((*words)[wordInd], wordBuffer);
-        (*words)[wordInd][wordBuffLen - 1] = '\0';
+    size_t numOfWords = 0;
+    char* ptr = hashTable->fileBuffer, *nxt = ptr;
+    while ((nxt = strchr(ptr, '\n')) != NULL) {
+        size_t len = nxt - ptr - 1;
+        ++numOfWords;
+
+        *nxt = '\0'; // change \n to \0
+        ptr = nxt + 1;
     }
+    LOG_DEBUG_VARS("counted number of words");
 
-    *numOfWordsPtr = numOfWords;
-    fclose(file);
 
-    return HASH_TABLE_STATUS_OK;
-}
 
-HashTableErrors constructHashTableFromWordsFile(
-    HashTable*      hashTable,
-    size_t          numOfWords,
-    char**          words
-) {
-    IF_ARG_NULL_RETURN(hashTable);
+
+
+
+
 
     hashTable->numOfElements = numOfWords;
-    hashTable->capacity      = numOfWords / HASH_TABLE_LOAD_FACTOR;
-    hashTable->array = (LinkedListNode**)calloc(hashTable->capacity,
-                                                sizeof(LinkedListNode*));
-    IF_NOT_COND_RETURN(hashTable->array != NULL,
+    hashTable->capacity = numOfWords / HASH_TABLE_LOAD_FACTOR;
+    hashTable->array    =         (LinkedListNode**)calloc(hashTable->capacity,
+                                                          sizeof(LinkedListNode*));
+    IF_NOT_COND_RETURN(hashTable->array  != NULL,
                        HASH_TABLE_MEMORY_ALLOCATION_ERROR);
 
+    LOG_DEBUG_VARS(hashTable->capacity);
+    char* word = hashTable->fileBuffer;
     for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        char* word = words[wordInd];
+        size_t wordLen = strlen(word);
+        //LOG_DEBUG_VARS(word);
+
+        // if (wordInd % 10000 == 0)
+        //     LOG_DEBUG_VARS(wordInd);
+
         int keyHash = getHashOfKey(hashTable, word);
-        int oldNumOfOccur = 0;
-        LinkedListErrors err = findValueByKey(hashTable->array[keyHash], word, &oldNumOfOccur);
+        int* nodeValuePtr = NULL;
+        LinkedListErrors err = getPointerToValueByKey(hashTable->array[keyHash], word, &nodeValuePtr);
         //LOG_DEBUG_VARS(wordBuffer, oldNumOfOccur);
-        IF_LIST_ERR_RETURN(addNewElement(&hashTable->array[keyHash], word, oldNumOfOccur + 1));
+        if (err == LINKED_LIST_KEY_NOT_FOUND_ERROR) {
+            IF_LIST_ERR_RETURN(addNewElement(&hashTable->array[keyHash], word, 1));
+        } else {
+            *nodeValuePtr = *nodeValuePtr + 1;
+        }
+
+        // if (wordInd % 30000 == 0) LOG_DEBUG_VARS(wordInd);
+        //LOG_DEBUG_VARS(wordLen, word);
+        word += wordLen + 1;
     }
+    LOG_DEBUG_VARS("finished adding words to table");
 
     return HASH_TABLE_STATUS_OK;
 }
@@ -135,9 +157,12 @@ HashTableErrors getNumberOfWordsOccurences(
     IF_ARG_NULL_RETURN(word);
     IF_ARG_NULL_RETURN(value);
 
+    int* nodeValuePtr = NULL;
     int keyHash = getHashOfKey(hashTable, word);
     //LOG_DEBUG_VARS(word, keyHash);
-    LinkedListErrors err = findValueByKey(hashTable->array[keyHash], word, value);
+    LinkedListErrors err = getPointerToValueByKey(hashTable->array[keyHash], word, &nodeValuePtr);
+    *value = nodeValuePtr == NULL ? 0 : *nodeValuePtr;
+
     if (err != LINKED_LIST_KEY_NOT_FOUND_ERROR &&
         err != LINKED_LIST_STATUS_OK)
         IF_LIST_ERR_RETURN(err);
@@ -153,6 +178,7 @@ HashTableErrors destructHashTable(
         IF_LIST_ERR_RETURN(destructLinkedList(hashTable->array[i]));
     }
     free(hashTable->array);
+    free(hashTable->fileBuffer);
 
     return HASH_TABLE_STATUS_OK;
 }

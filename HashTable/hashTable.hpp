@@ -11,18 +11,12 @@ struct HashTable {
     size_t                  numOfElements;
     size_t                  capacity;
     LinkedListNode**        array;
+    char*                   fileBuffer;
 };
 
-HashTableErrors readListOfWordsFromFile(
-    size_t*         numOfWordsPtr,
-    char***         words,
-    const char*     pathToWordsFile
-);
-
 HashTableErrors constructHashTableFromWordsFile(
-    HashTable*      hashTable,
-    size_t          numOfWords,
-    char**          words
+    const char*     pathToWordsFile,
+    HashTable*      hashTable
 );
 
 HashTableErrors getNumberOfWordsOccurences(

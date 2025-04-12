@@ -1,42 +1,47 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "LinkedList/linkedList.hpp"
 #include "HashTable/hashTable.hpp"
 #include "external/LoggerLib/include/logLib.hpp"
 
-const size_t MAX_WORD_LEN   = 20;
-const size_t NUM_OF_QUERIES = 2000000;
-const int    NUM_OF_LETTERS = 26;
+const size_t MAX_WORD_LEN      = 40;
+const size_t MAX_BYTES_IN_FILE = 33e6 + 10;
 
-void generateRandomWord(char* word) {
-    assert(word != NULL);
-
-    int len = rand() % MAX_WORD_LEN + 1;
-    for (int i = 0; i < len; ++i)
-        word[i] = 'a' + (rand() % NUM_OF_LETTERS);
-}
-
-void getWordWordForQuery(char* result, char** words, size_t numOfWords) {
-    if (rand() & 1) {
-        generateRandomWord(result);
-        return;
-    }
-
-    size_t wordInd = rand() % numOfWords;
-    char* word = words[wordInd];
-    size_t len = strlen(word);
-    strcpy(result, word);
+size_t getFileSize(FILE* file) {
+    struct stat buf;
+    fstat(fileno(file), &buf);
+    off_t fileSize = buf.st_size;
+    return fileSize;
 }
 
 void askQueries(
-    struct HashTable*       hashTable,
-    char**                  words,
-    size_t                  numOfWords
+    struct HashTable*       hashTable
 ) {
     assert(hashTable != NULL);
 
-    char word[MAX_WORD_LEN] = {};
+    FILE* file = fopen("sourceFiles/queries.txt", "rb");
+    assert(file != NULL);
+    if (file == NULL) {
+        printf(getHashTableErrorMessage(HASH_TABLE_COULDNT_OPEN_FILE_ERROR));
+        return;
+    }
+
+    size_t fileSize = getFileSize(file);
+    LOG_DEBUG("successfuly opened queries file");
+    LOG_DEBUG_VARS(fileSize);
+
+    char* fileBuffer = (char*)calloc(MAX_BYTES_IN_FILE, sizeof(char));
+    assert(fileBuffer != NULL);
+
+    fread(fileBuffer, sizeof(char), fileSize, file);
+
     size_t sumOfOccur = 0;
-    for (size_t queryInd = 0; queryInd < NUM_OF_QUERIES; ++queryInd) {
-        getWordWordForQuery(word, words, numOfWords);
+    size_t cntOfQueries = 0;
+    char* word = fileBuffer, *nxt = word;
+    while ((nxt = strchr(word, '\n')) != NULL) {
+        *nxt = '\0'; // change \n to \0
 
         int numOfOccur = 0;
         HashTableErrors err = getNumberOfWordsOccurences(hashTable, word, &numOfOccur);
@@ -48,42 +53,25 @@ void askQueries(
         } else {
             //LOG_DEBUG_VARS(word, "no such word in text");
         }
+
+        word = nxt + 1;
+        ++cntOfQueries;
     }
-    LOG_DEBUG_VARS(sumOfOccur);
+    LOG_DEBUG_VARS(cntOfQueries, sumOfOccur);
+
+    fclose(file);
+    free(fileBuffer);
 }
 
 int main() {
     setLoggingLevel(DEBUG);
 
-    LOG_DEBUG("Hello!");
-
-    size_t numOfWords = 0;
-    char** words = NULL;
-    readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt");
-
     struct HashTable hashTable = {};
-    constructHashTableFromWordsFile(&hashTable, numOfWords, words);    
+    constructHashTableFromWordsFile("sourceFiles/allWords.txt", &hashTable);
 
-    askQueries(&hashTable, words, numOfWords);
+    askQueries(&hashTable);
 
-    // int numOfOccur = 0;
-    // HashTableErrors err = getNumberOfWordsOccurences(&hashTable, "Hermione", &numOfOccur);
-    // LOG_DEBUG_VARS(numOfOccur);
-
-    destructHashTable(&hashTable);
-    for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        if (words[wordInd] != NULL) {
-            //LOG_DEBUG_VARS(wordInd, words[wordInd]);
-            free(words[wordInd]);
-        }
-    }
-    free(words);
-
-
-    // struct HashTable hashTable = {};
-    // constructHashTableFromWordsFile(&hashTable, "sourceFiles/allWords.txt");
-
-    // const char* words[] = {
+    // const char* queries[] = {
     //     "hobbit",
     //     "hello",
     //     "home",
@@ -95,31 +83,21 @@ int main() {
     //     "not"
     // };
 
-    // const size_t NUM_OF_WORDS = sizeof(words) / sizeof(*words);
+    // const size_t NUM_OF_Q = sizeof(queries) / sizeof(*queries);
 
     // // setLoggingLevel(DEBUG);
-    // for (size_t wordInd = 0; wordInd < NUM_OF_WORDS; ++wordInd) {
+    // for (size_t wordInd = 0; wordInd < NUM_OF_Q; ++wordInd) {
     //     int value = -1;
-    //     HashTableErrors err = getNumberOfWordsOccurences(&hashTable, words[wordInd], &value);
+    //     HashTableErrors err = getNumberOfWordsOccurences(&hashTable, queries[wordInd], &value);
     //     if (err != HASH_TABLE_STATUS_OK) {
-    //         LOG_DEBUG_VARS(words[wordInd], "no such word in text");
+    //         LOG_DEBUG_VARS(queries[wordInd], "no such word in text");
     //     } else {
-    //         LOG_DEBUG_VARS(words[wordInd], value);
+    //         LOG_DEBUG_VARS(queries[wordInd], value);
     //     }
     // }
 
-    // destructHashTable(&hashTable);
 
-    // LinkedListNode* tail = NULL;
-    // constructLinkedListNode("i am first node", 12, &tail);
-
-    // addNewElement(&tail, "i am 2nd node", 19);
-
-    // int value = -1;
-    // LinkedListErrors err = findValueByKey(tail, "i am 2nd node", &value);
-    // LOG_DEBUG_VARS(getLinkedListErrorMessage(err), value);
-
-    // destructLinkedList(tail);
+    destructHashTable(&hashTable);
 
     return 0;
 }

@@ -15,11 +15,10 @@ LinkedListErrors constructLinkedListNode(
     LinkedListNode**            node
 );
 
-// returns key not found error if key is not present in list
-LinkedListErrors findValueByKey(
-    const LinkedListNode*       tail,
-    const char*                 key,
-    int*                        value
+LinkedListErrors getPointerToValueByKey(
+    LinkedListNode*         tail,
+    const char*             key,
+    int**                   value
 );
 
 LinkedListErrors addNewElement(
