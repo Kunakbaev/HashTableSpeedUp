@@ -15,21 +15,13 @@ struct HashTable {
     size_t                    numOfShortWords;
     size_t                    capacityShortWords;
     LinkedListShortKeyNode**  shortWordsArray;
+
+    char*                     fileBuffer;
 };
 
-HashTableErrors readListOfWordsFromFile(
-    size_t*         numOfWordsPtr,
-    char***         words,
-    const char*     pathToWordsFile,
-    size_t*         numOfLongWordsPtr,
-    size_t*         numOfShortWordsPtr
-);
-
 HashTableErrors constructHashTableFromWordsFile(
-    HashTable*      hashTable,
-    size_t          numOfLongWords,
-    size_t          numOfShortWords,
-    char**          words
+    const char*     pathToWordsFile,
+    HashTable*      hashTable
 );
 
 HashTableErrors getNumberOfWordsOccurences(

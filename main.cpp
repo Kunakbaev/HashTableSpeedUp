@@ -3,41 +3,70 @@
 #include "external/LoggerLib/include/logLib.hpp"
 
 const size_t MAX_WORD_LEN   = 20;
-const size_t NUM_OF_QUERIES = 8000000;
-const int    NUM_OF_LETTERS = 26;
+// const size_t NUM_OF_QUERIES = 8000000;
+// const int    NUM_OF_LETTERS = 26;
 
-void generateRandomWord(char* word) {
-    assert(word != NULL);
+// void generateRandomWord(char* word) {
+//     assert(word != NULL);
 
-    int len = rand() % MAX_WORD_LEN + 1;
-    for (int i = 0; i < len; ++i)
-        word[i] = 'a' + (rand() % NUM_OF_LETTERS);
-}
+//     int len = rand() % MAX_WORD_LEN + 1;
+//     for (int i = 0; i < len; ++i)
+//         word[i] = 'a' + (rand() % NUM_OF_LETTERS);
+// }
 
-void getWordWordForQuery(char* result, char** words, size_t numOfWords) {
-    if (rand() & 1) {
-        generateRandomWord(result);
-        return;
-    }
+// void getWordWordForQuery(char* result, char** words, size_t numOfWords) {
+//     if (rand() & 1) {
+//         generateRandomWord(result);
+//         return;
+//     }
 
-    size_t wordInd = rand() % numOfWords;
-    char* word = words[wordInd];
-    size_t len = strlen(word);
-    strcpy(result, word);
-}
+//     size_t wordInd = rand() % numOfWords;
+//     char* word = words[wordInd];
+//     size_t len = strlen(word);
+//     strcpy(result, word);
+// }
+
+// void askQueries(
+//     struct HashTable*       hashTable
+// ) {
+//     assert(hashTable != NULL);
+
+//     char word[MAX_WORD_LEN] = {};
+//     size_t sumOfOccur = 0;
+//     for (size_t queryInd = 0; queryInd < NUM_OF_QUERIES; ++queryInd) {
+//         getWordWordForQuery(word, words, numOfWords);
+
+//         int numOfOccur = 0;
+//         HashTableErrors err = getNumberOfWordsOccurences(hashTable, word, &numOfOccur);
+//         // if got error, than either no such word is present in hash table, 
+//         // or that's a real error and not just key absence
+//         if (err == HASH_TABLE_STATUS_OK) {
+//             sumOfOccur += numOfOccur;
+//             //LOG_DEBUG_VARS(word, numOfOccur);
+//         } else {
+//             //LOG_DEBUG_VARS(word, "no such word in text");
+//         }
+//     }
+//     LOG_DEBUG_VARS(sumOfOccur);
+// }
 
 void askQueries(
-    struct HashTable*       hashTable,
-    char**                  words,
-    size_t                  numOfWords
+    struct HashTable*       hashTable
 ) {
     assert(hashTable != NULL);
 
+    FILE* file = fopen("sourceFiles/queries.txt", "r");
+    assert(file != NULL);
+    if (file == NULL) {
+        printf(getHashTableErrorMessage(HASH_TABLE_COULDNT_OPEN_FILE_ERROR));
+        return;
+    }
+
     char word[MAX_WORD_LEN] = {};
     size_t sumOfOccur = 0;
-    for (size_t queryInd = 0; queryInd < NUM_OF_QUERIES; ++queryInd) {
-        getWordWordForQuery(word, words, numOfWords);
-
+    size_t cntOfQueries = 0;
+    while (fgets(word, MAX_WORD_LEN, file)) {
+        //LOG_DEBUG_VARS(word);
         int numOfOccur = 0;
         HashTableErrors err = getNumberOfWordsOccurences(hashTable, word, &numOfOccur);
         // if got error, than either no such word is present in hash table, 
@@ -48,8 +77,12 @@ void askQueries(
         } else {
             //LOG_DEBUG_VARS(word, "no such word in text");
         }
+
+        ++cntOfQueries;
     }
-    LOG_DEBUG_VARS(sumOfOccur);
+    LOG_DEBUG_VARS(cntOfQueries, sumOfOccur);
+
+    fclose(file);
 }
 
 int main() {
@@ -57,19 +90,20 @@ int main() {
 
     LOG_DEBUG("Hello!");
 
-    size_t numOfWords      = 0;
-    size_t numOfShortWords = 0;
-    size_t numOfLongWords  = 0;
-    char** words = NULL;
-    readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt", &numOfLongWords, &numOfShortWords);
+    //size_t numOfWords      = 0;
+    //size_t numOfShortWords = 0;
+    //size_t numOfLongWords  = 0;
+    //char** words = NULL;
+    //readListOfWordsFromFile(&numOfWords, &words, "sourceFiles/allWords.txt", &numOfLongWords, &numOfShortWords);
 
-    LOG_DEBUG_VARS(numOfLongWords, numOfShortWords);
+    //LOG_DEBUG_VARS(numOfLongWords, numOfShortWords);
 
     struct HashTable hashTable = {};
-    constructHashTableFromWordsFile(&hashTable, numOfLongWords, numOfShortWords, words);    
+    //constructHashTableFromWordsFile(&hashTable, numOfLongWords, numOfShortWords, words);    
+    constructHashTableFromWordsFile("sourceFiles/allWords.txt", &hashTable);
     LOG_DEBUG_VARS("ok");
 
-    askQueries(&hashTable, words, numOfWords);
+    askQueries(&hashTable);
 
 
 
@@ -108,13 +142,13 @@ int main() {
     // LOG_DEBUG_VARS(numOfOccur);
 
     destructHashTable(&hashTable);
-    for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
-        if (words[wordInd] != NULL) {
-            //LOG_DEBUG_VARS(wordInd, words[wordInd]);
-            free(words[wordInd]);
-        }
-    }
-    free(words);
+    // for (size_t wordInd = 0; wordInd < numOfWords; ++wordInd) {
+    //     if (words[wordInd] != NULL) {
+    //         //LOG_DEBUG_VARS(wordInd, words[wordInd]);
+    //         free(words[wordInd]);
+    //     }
+    // }
+    // free(words);
 
 
     // struct HashTable hashTable = {};
