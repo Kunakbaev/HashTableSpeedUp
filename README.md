@@ -7,9 +7,10 @@ In this project, my goal was to optimize hash table with chaining approach. What
 
 In this repository there are 3 branches:
 
-* master - the most simple and straightforward approach
-* strcmpImprovement - now there are 2 hash tables, usage of strcmp is significantly reduced
-* keySearchInListAndListImprovement - some kind of unrolling is done, now list node contains more than one key at once
+* [master](https://github.com/Kunakbaev/HashTableSpeedUp/tree/master) - the most simple and straightforward approach
+* [strcmpImprovement](https://github.com/Kunakbaev/HashTableSpeedUp/tree/strcmpImprovment) - now there are 2 hash tables, usage of strcmp is significantly reduced
+* [keySearchInListAndListImprovement](https://github.com/Kunakbaev/HashTableSpeedUp/tree/keySearchInListAndListImprovment) - some kind of unrolling is done, now list node contains more than one key at once
+* [asmMyStrcmpFunc](https://github.com/Kunakbaev/HashTableSpeedUp/tree/asmMyStrcmpFunc) - replaced libc **strcmp** function with my own, custom one, written on asm
 
 <h3>How hash table is actually used?</h3>
 <hr>
@@ -88,3 +89,15 @@ Works **1.23** times better than without this optimization flag and **3.46** tim
 Why did this happen?
 
 Let's use some **perf** functionality to find the reason. We can inspect assembler code for **getPointerToValueBySmallLenKey** (nice naming, yes) function (that's our bottleneck) to see how it differs from previous one. It occurs, that **-O3** managed to unroll loop into 8 operations, so this time comparisons are really happening all at once.
+
+Once again we see that **strcmp** is leading the list of time consuming functions of our program. What can we do about that? Well, libc **strcmp** is too complex, it has to be very safe, work with various input strings (different length for example). But our case is not so general, let's use this to our advantage: we can replace **strcmp** with our own **myStrcmp** function, which will be written on asm and will really light and fast.
+
+Let's implement it and see what will change:
+
+![myStrcmp on asm optimization perfomance](images/myStrcmpOnAsmOpt_performance.png)
+
+![myStrcmp on asm optimization profiling](images/myStrcmpOnAsmOpt_profiling.png)
+
+We gained a **2.49** boost compared to the previous implementation (and **8.62** times better than initial approach). That's very good (if I'm not mistaken and program still works correctly. Well, I've checked, it appears that it's really started working this much better).
+
+There's even no **myStrcmp** function in list of hottest functions anymore.
