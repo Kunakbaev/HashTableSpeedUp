@@ -6,6 +6,11 @@ CFLAGS		 := -g -Ofast
 
 MY_LOG_LIB_NAME    				:= my_loglib
 
+
+ASM_COMPILER					:= nasm
+ASM_ARGS						:= -f elf64
+ASM_LINKER						:= ld
+
 LOGGER_EXT_LIB_DIR 				:= ./external/LoggerLib
 LIB_RUN_NAME       				:= hashTableSpeedUp
 BUILD_DIR_PATH					:= building
@@ -13,6 +18,7 @@ BUILD_DIR_TARGET_NAME          	:= createBuildDir
 LINKED_LIST_DIR					:= LinkedList
 HASH_TABLE_DIR					:= HashTable
 SRC_DIR							:= ./
+ASM_MY_STRCMP_SRC  				:= ./myStrcmpFunc/myStrcmp.asm
 
 SRC 							:=  $(SRC_DIR)/main.cpp 			 				\
 									$(LINKED_LIST_DIR)/linkedList.cpp				\
@@ -22,6 +28,7 @@ SRC 							:=  $(SRC_DIR)/main.cpp 			 				\
 									$(HASH_TABLE_DIR)/hashTable.cpp					\
 									$(HASH_TABLE_DIR)/errorsHandlerHashTable.cpp	\
 
+ASM_OBJ_NAME					:= $(BUILD_DIR_PATH)/myStrcmp.o
 OBJ								:= $(patsubst %.cpp, $(BUILD_DIR_PATH)/%.o, $(notdir ${SRC})) 
 
 CFLAGS += -I $(LOGGER_EXT_LIB_DIR)/include
@@ -36,8 +43,12 @@ endif
 
 # -------------------------   HELPER TARGETS   ---------------------------
 
-compile: $(OBJ)
-	@$(CC) $^ -o $(BUILD_DIR_PATH)/${LIB_RUN_NAME} $(CFLAGS) -l$(MY_LOG_LIB_NAME) $(CFLAGS)
+# compileAsm
+$(BUILD_DIR_PATH)/myStrcmp.o: $(ASM_MY_STRCMP_SRC)
+	$(ASM_COMPILER) -o $(ASM_OBJ_NAME) $(ASM_MY_STRCMP_SRC) $(ASM_ARGS)
+
+compile: $(ASM_OBJ_NAME) $(OBJ)
+	$(CC) $(OBJ) $(ASM_OBJ_NAME) -o $(BUILD_DIR_PATH)/${LIB_RUN_NAME} $(CFLAGS) -l$(MY_LOG_LIB_NAME) $(CFLAGS)
 
 $(BUILD_DIR_PATH)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR_TARGET_NAME)
 	@$(CC) -c $< -o $@
@@ -58,7 +69,7 @@ runProfiling: clean compile
 	perf record building/hashTableSpeedUp
 	perf report
 
-# WARNING: cleans build dir everytime
+# WARNING: cleans build dir every time
 compileAndRun: clean compile run
 
 $(BUILD_DIR_TARGET_NAME):

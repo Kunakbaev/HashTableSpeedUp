@@ -63,11 +63,21 @@ void askQueries(
     free(fileBuffer);
 }
 
+// extern "C" int myStrcmp(const char* one, const char* two); 
+
 int main() {
     setLoggingLevel(DEBUG);
     
     // WARNING: don't forget to call this function
     allocateFreeNodesBuffers();
+
+    // LOG_DEBUG_VARS("bruh");
+    // for (int i = 0; i < 10; ++i) {
+    //     const char* a = "commendations";
+    //     const char* b = "commendations";
+    //     int cmpRes = myStrcmp(a, b);
+    //     LOG_DEBUG_VARS(a, b, cmpRes);
+    // }
 
     struct HashTable hashTable = {};
     constructHashTableFromWordsFile("sourceFiles/allWords.txt", &hashTable);
@@ -81,7 +91,7 @@ int main() {
     //     "fast",
     //     "shield",
     //     "armor",
-    //     "Bilbo",
+    //     "bilbo",
     //     "was",
     //     "not",
     //     "absolutely",

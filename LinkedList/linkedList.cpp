@@ -10,6 +10,8 @@
 #define IF_NOT_COND_RETURN(condition, error) \
     COMMON_IF_NOT_COND_RETURN(condition, error, getLinkedListErrorMessage)\
 
+extern "C" int myStrcmp(const char* one, const char* two); 
+
 // returns key not found error if key is not present in list
 LinkedListErrors findValueByKey(
     LinkedListNode*         tail,
@@ -22,7 +24,14 @@ LinkedListErrors findValueByKey(
     LinkedListNode* curNode = tail;
     while (curNode != NULL) {
         //LOG_DEBUG_VARS(curNode->key, key);
-        if (strcmp(key, curNode->key) == 0) {
+        int result = myStrcmp(key, curNode->key);
+        //int result2 = strcmp(key, curNode->key) == 0;
+        //LOG_DEBUG_VARS(result, result2, key, curNode->key);
+        // if (result != result2) {
+        //     LOG_DEBUG_VARS(result, result2, key, curNode->key);
+        //     exit(0);
+        // }
+        if (result == 0) {
             *value = &(curNode->value);
             return LINKED_LIST_STATUS_OK;
         }
