@@ -1,6 +1,8 @@
 #pragma GCC optimize("O3")
 #pragma GCC target("avx2")
 
+#include <math.h>
+
 #include "linkedList.hpp"
 #include "../common/errorHandlerDefines.hpp"
 
@@ -13,18 +15,21 @@
 #define IF_NOT_COND_RETURN(condition, error) \
     COMMON_IF_NOT_COND_RETURN(condition, error, getLinkedListErrorMessage)\
 
-//const size_t   ONE_KEY_BITS_SIZE = 256 / UNROLL_BATCH_SIZE;
-const uint64_t NUM_OF_LETTERS    = 31;
-//static_assert(256 % UNROLL_BATCH_SIZE == 0);
+const uint64_t HASH_BASE = 31;
 
 uint64_t getHashForSmallLenKey(const char* key) {
     uint64_t heh = 0;
     const char* charPtr = key;
     while (*charPtr != '\0') {
-        heh *= NUM_OF_LETTERS;
+        heh *= HASH_BASE;
         heh += *charPtr - 'a' + 1;
         ++charPtr;
     }
+
+    // const char* ptr = key;
+    // for (int i = 0; i < 10 && *ptr != '\0'; ++i, ++ptr) {
+    //     heh += precalculatedPowsOf26[i] * (*ptr - 'a' + 1);
+    // }
 
     return heh;
 }
@@ -41,7 +46,7 @@ LinkedListErrors getPointerToValueBySmallLenKey(
     //*value = 0;
 
     //LOG_DEBUG_VARS("find value");
-    //const __m256i searchKeyHashReg = _mm256_set1_epi64x(keyHash);
+    const __m256i searchKeyHashReg = _mm256_set1_epi64x(keyHash);
     LinkedListShortKeyNode* curNode = tail;
     size_t len = 0;
     while (curNode != NULL) {
@@ -51,6 +56,27 @@ LinkedListErrors getPointerToValueBySmallLenKey(
         // if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
         //     break;
         // }
+
+        bool f = false;
+        for (int i = 0; i < UNROLL_BATCH_SIZE; i += 4) {
+            __m256i curNodeKey = _mm256_loadu_si256((__m256i*)curNode->key + i * 8);
+            __m256i cmpResReg = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
+            //int mask = 0;
+            if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
+                f = true;
+                break;
+            }
+        }
+        if (f) break;
+
+        // int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+        // for (int i = 0; i < UNROLL_BATCH_SIZE; i += 4) {
+        //     c0 += curNode->key[i    ] == keyHash;
+        //     c1 += curNode->key[i + 1] == keyHash;
+        //     c2 += curNode->key[i + 2] == keyHash;
+        //     c3 += curNode->key[i + 3] == keyHash;
+        // }
+        // if (c0 + c1 + c2 + c3) break;
 
         // bool f = curNode->key[0] == keyHash ||
         //          curNode->key[1] == keyHash ||
@@ -64,10 +90,10 @@ LinkedListErrors getPointerToValueBySmallLenKey(
         //     break;
         // }
 
-        int c = 0;
-        for (size_t i = 0; i < UNROLL_BATCH_SIZE; ++i)
-            c += curNode->key[i] == keyHash;
-        if (c) break;
+        // int c = 0;
+        // for (size_t i = 0; i < UNROLL_BATCH_SIZE; ++i)
+        //     c += curNode->key[i] == keyHash;
+        // if (c) break;
 
         // int c = 0;
         // const uint64_t* ptr = curNode->key;

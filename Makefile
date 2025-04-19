@@ -63,7 +63,7 @@ run:
 	@$(BUILD_DIR_PATH)/$(LIB_RUN_NAME)
 
 testPerfomance: clean compile
-	hyperfine building/hashTableSpeedUp --warmup 3 -r 10
+	hyperfine building/hashTableSpeedUp --warmup 10 -r 100
 
 runProfiling: clean compile
 	perf record building/hashTableSpeedUp
