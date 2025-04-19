@@ -101,3 +101,9 @@ Let's implement it and see what will change:
 We gained a **2.49** boost compared to the previous implementation (and **8.62** times better than initial approach). That's very good (if I'm not mistaken and program still works correctly. Well, I've checked, it appears that it's really started working this much better).
 
 There's even no **myStrcmp** function in list of hottest functions anymore.
+
+![loop with simd operations performance](images/simdInstructionsInLoopOptPerformance.png)
+
+![loop with simd operations profiling](images/simdInstructionsInLoopOptProfiling.png)
+
+Let's return back to **getPointerToValueBySmallLenKey** function and try to optimize it a bit more. As we have an array of keys in each node, we can use **SIMD instructions** to process nodes faster. I've changed unrolling batch size (now there are 16 keys stored in node, when previously was only 8) and unrolled loop by 4 iterations. Now we load each 4 continuous hashes in one **__m256i** register and then work with it. By doing those steps I've managed to get an **11%** boost compared to a previous approach. 
