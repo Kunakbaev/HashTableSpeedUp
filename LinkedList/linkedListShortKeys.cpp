@@ -59,8 +59,8 @@ LinkedListErrors getPointerToValueBySmallLenKey(
 
         bool f = false;
         for (int i = 0; i < UNROLL_BATCH_SIZE; i += 4) {
-            __m256i curNodeKey = _mm256_loadu_si256((__m256i*)curNode->key + i * 8);
-            __m256i cmpResReg = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
+            __m256i curNodeKey = _mm256_loadu_si256((__m256i*)(curNode->key + i));
+            __m256i cmpResReg  = _mm256_cmpeq_epi64(curNodeKey, searchKeyHashReg);
             //int mask = 0;
             if (!_mm256_testz_si256(cmpResReg, cmpResReg)) {
                 f = true;
