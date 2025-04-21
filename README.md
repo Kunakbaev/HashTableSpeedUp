@@ -16,7 +16,7 @@ Hash table counts number of occurrences for each word from provided books. Keys 
 
 **Note:** all keys should contain only lowercase letters of english alphabet.
 
-**Hash function**: I've used simple [**polynomial hash function**](https://en.wikipedia.org/wiki/Rolling_hash#Polynomial_rolling_hash) with base 31 (prime number that is larger than number of english letters, which is 26)
+**Hash function**: I've used simple [**polynomial hash function**](https://en.wikipedia.org/wiki/Rolling_hash#Polynomial_rolling_hash) with base 31 (prime number, that is larger than number of english letters, which is 26).
 
 Hash table methods:
 1) insert new key (word). It's actually not present in hash table usecase instead there's only function **constructHashTableFromWordsFile**. But this function is implemented as a "private" method.
@@ -100,11 +100,11 @@ This tool is very convenient as it also shows dispersion, minimum and maximum of
 
 <h5> 3.5.2 Perf </h5>
 
-In order to find bottlenecks in my program (which part or function takes the longest time to compute) [**perf**](https://perfwiki.github.io/main/tutorial/) profiler. That's a really handy tool and here's why:
+In order to find bottlenecks in my program (which part or function takes the longest time to compute) I've used [**perf**](https://perfwiki.github.io/main/tutorial/) profiler. That's a really handy tool and here's why:
 
-* there are various commands (however I've used only **record** command)
+* there are various commands (however I've used only **record**)
 * shows list of functions sorted by percentage of time consumption
-* you can click on function and see it's asm representation. Also at the beginning of every line there's same time consumption percentage (but only for this function and not for the whole program), so you can see more details
+* you can click on any function and see it's asm representation. Also at the beginning of every line there's same time consumption percentage (but only for this function and not for the whole program), so you can see more details, such as which asm instruction takes longest time for example
 
 <h3>4. Process of improvement</h3>
 <hr>
@@ -176,7 +176,7 @@ There's even no **myStrcmp** function in list of hottest functions anymore.
 
 Let's return back to **getPointerToValueBySmallLenKey** function and try to optimize it a bit more. As we have an array of keys in each node, we can use **SIMD instructions** to process nodes faster. I've changed unrolling batch size (now there are 16 keys stored in node, when previously was only 8) and unrolled loop by 4 iterations. Now we load each 4 continuous hashes in one **__m256i** register and then work with it. By doing those steps I've managed to get an **11%** boost compared to a previous approach.
 
-<h3> Conclusion </h3>
+<h3> 5. Conclusion </h3>
 <hr>
 
 Relative speed up column is current version (row) compared to previous one.
@@ -192,4 +192,4 @@ Absolute speed up colum is current version (row) compared to initial (naive) one
 | my asm strcmp     | 332.3 &pm; 7.4  | 2.49              | 8.62              |
 | SIMD instructions | 297.1 &pm; 10.9 | 1.11              | 9.64              |
 
-Of course is's always possible to rewrite your program with better algorithm. For example for our purpose we can use [ideal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function), as we don't have any deletions and it's worth to try [open addressing collision resolution](https://en.wikipedia.org/wiki/Open_addressing). And that's right thing to do, when you're trying to optimize your program. However, if you don't see any possible improvement in algorithm, than, even with simple knowledge of how compiler works and when it's useful to change function to it's assembler equivalent, you can speed up your program significantly (we've managed to boost it almost 10 times!).
+Of course it's always possible to rewrite your program with better algorithm. For example for our purpose we can use [ideal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function), as we don't have any deletions and it's worth to try [open addressing collision resolution](https://en.wikipedia.org/wiki/Open_addressing). And that's right thing to do, when you're trying to optimize your program. However, if you don't see any possible improvements in algorithm, than, even with simple knowledge of how compiler works and when it's useful to change function to it's assembler equivalent, you can speed up your program significantly (we've managed to boost it almost 10 times!).
