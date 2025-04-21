@@ -2,9 +2,8 @@
 
 set -eu
 
-SOURCE_FILES_DIR="sourceFiles"
-BOOKS_SOURCE_DIR="$SOURCE_FILES_DIR/books"
-FILES_WITH_WORDS_DEST_DIR="$SOURCE_FILES_DIR/words"
+BOOKS_SOURCE_DIR="books"
+FILES_WITH_WORDS_DEST_DIR="words"
 ALL_WORDS_FILE_NAME="allWordsFromBooks"
 MIN_WORD_LEN=3
 
@@ -34,7 +33,7 @@ function concatWordFilesIntoOne() {
         fileNames+=("$FILES_WITH_WORDS_DEST_DIR/$f")
     done
 
-    cat "${fileNames[@]}" > "$SOURCE_FILES_DIR/"$ALL_WORDS_FILE_NAME".txt"
+    cat "${fileNames[@]}" > $ALL_WORDS_FILE_NAME".txt"
 }
 
 generateAllWordFiles
@@ -42,6 +41,6 @@ generateAllWordFiles
 echo "concatinating all words from all books into one file"
 concatWordFilesIntoOne
 
-cat "$SOURCE_FILES_DIR/$ALL_WORDS_FILE_NAME.txt" "$SOURCE_FILES_DIR/randWordsFile" | awk '{print tolower($0)}' > "$SOURCE_FILES_DIR/allWords.txt"
+cat "$ALL_WORDS_FILE_NAME.txt" "randWordsFile" | awk '{print tolower($0)}' > "allWords.txt"
 
 echo "done"
