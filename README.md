@@ -183,13 +183,13 @@ Relative speed up column is current version (row) compared to previous one.
 
 Absolute speed up colum is current version (row) compared to initial (naive) one.
 
-| optimization name | performance   | relative speed up | absolute speed up |
+| optimization name | performance, ms   | relative speed up | absolute speed up |
 |-------------------|---------------|-------------------|-------------------|
-| naive approach    | 2864 &pm; 0.289 | 1                 | 1                 |
-| 2 hash tables     | 2159 &pm; 0.039 | 1.32              | 1.32              |
-| list unroll       | 1023 &pm; 0.018 | 2.11              | 2.80              |
-| O3 flag           | 826.8 &pm; 12.5 | 1.23              | 3.46              |
-| my asm strcmp     | 332.3 &pm; 7.4  | 2.49              | 8.62              |
-| SIMD instructions | 297.1 &pm; 10.9 | 1.11              | 9.64              |
+| naive approach    | 2900.0 &pm; 300 | 1                 | 1                 |
+| 2 hash tables     | 2160 &pm; 40 | 1.32              | 1.32              |
+| list unroll       | 1020 &pm; 20 | 2.11              | 2.80              |
+| O3 flag           | 830 &pm; 10 | 1.23              | 3.46              |
+| my asm strcmp     | 330 &pm; 10  | 2.49              | 8.62              |
+| SIMD instructions | 300 &pm; 10 | 1.11              | 9.64              |
 
 Of course it's always possible to rewrite your program with better algorithm. For example for our purpose we can use [ideal hashing](https://en.wikipedia.org/wiki/Perfect_hash_function), as we don't have any deletions and it's worth to try [open addressing collision resolution](https://en.wikipedia.org/wiki/Open_addressing). And that's right thing to do, when you're trying to optimize your program. However, if you don't see any possible improvements in algorithm, than, even with simple knowledge of how compiler works and when it's useful to change function to it's assembler equivalent, you can speed up your program significantly (we've managed to boost it almost 10 times!).
