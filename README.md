@@ -166,6 +166,46 @@ Let's implement it and see what will change:
 
 ![myStrcmp on asm optimization profiling](images/myStrcmpOnAsmOpt_profiling.png)
 
+Asm function code:
+
+```
+
+myStrcmp:
+    ; loop never reaches ends, because return from function happens earlier
+    ; and before that return, rax is always set
+    ; mov rax, 0
+
+    xor rcx, rcx
+    xor rdx, rdx
+
+    charsLoop:
+        mov dl, byte [rdi]
+        mov cl, byte [rsi]
+
+        cmp rcx, rdx
+        je sameChars
+            ; different chars
+            mov rax, 0
+            ret
+        sameChars:
+
+        test rcx, rcx
+        je completelyEqual
+            ; strings still are equal, continue loop
+            inc rdi
+            inc rsi
+            jmp charsLoop
+        completelyEqual:
+
+        ; same chars, but both are equal to \0
+        ; strings are completely equal
+        mov rax, 1
+        ret
+
+    ; this will never be reached, so this is useless command
+    ; ret
+```
+
 We gained a **2.49** boost compared to the previous implementation (and **8.62** times better than initial approach). That's very good (if I'm not mistaken and program still works correctly. Well, I've checked, it appears that it's really started working this much better).
 
 There's even no **myStrcmp** function in list of hottest functions anymore.
